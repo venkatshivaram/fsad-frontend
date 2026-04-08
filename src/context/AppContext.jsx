@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config/api';
 
 const AppContext = createContext();
@@ -51,7 +51,7 @@ export const AppProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/courses`);
       const data = await res.json();
@@ -59,9 +59,9 @@ export const AppProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, []);
 
-  const fetchRegisteredCourses = async (userId) => {
+  const fetchRegisteredCourses = useCallback(async (userId) => {
     try {
       const res = await fetch(`${API_URL}/student/${userId}/courses`);
       const data = await res.json();
@@ -69,9 +69,9 @@ export const AppProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, []);
 
-  const fetchDropRequests = async (userId = null, role = 'admin') => {
+  const fetchDropRequests = useCallback(async (userId = null, role = 'admin') => {
     try {
       const url = role === 'admin'
         ? `${API_URL}/admin/drop-requests`
@@ -82,9 +82,9 @@ export const AppProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, []);
 
-  const fetchRegistrationRequests = async (userId, role) => {
+  const fetchRegistrationRequests = useCallback(async (userId, role) => {
     try {
       const url = role === 'admin' 
         ? `${API_URL}/admin/registration-requests` 
@@ -95,9 +95,9 @@ export const AppProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, []);
 
-  const fetchWaitlistRequests = async (userId) => {
+  const fetchWaitlistRequests = useCallback(async (userId) => {
     try {
       const res = await fetch(`${API_URL}/student/${userId}/waitlist-requests`);
       const data = await res.json();
@@ -105,9 +105,9 @@ export const AppProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, []);
 
-  const fetchNotifications = async (userId) => {
+  const fetchNotifications = useCallback(async (userId) => {
     try {
       const res = await fetch(`${API_URL}/notifications/${userId}`);
       const data = await res.json();
@@ -115,22 +115,29 @@ export const AppProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, []);
 
-  const refreshStudentData = (userId = currentUser?.id) => {
+  const refreshStudentData = useCallback((userId = currentUser?.id) => {
     if (!userId) return;
     fetchRegisteredCourses(userId);
     fetchRegistrationRequests(userId, 'student');
     fetchWaitlistRequests(userId);
     fetchDropRequests(userId, 'student');
     fetchCourses();
-  };
+  }, [
+    currentUser?.id,
+    fetchCourses,
+    fetchDropRequests,
+    fetchRegisteredCourses,
+    fetchRegistrationRequests,
+    fetchWaitlistRequests
+  ]);
 
-  const refreshAdminData = () => {
+  const refreshAdminData = useCallback(() => {
     fetchDropRequests();
     fetchRegistrationRequests(null, 'admin');
     fetchCourses();
-  };
+  }, [fetchCourses, fetchDropRequests, fetchRegistrationRequests]);
 
   const hydrateUserSession = (userData) => {
     if (!userData || !userData.role || !['student', 'admin'].includes(userData.role)) {
@@ -172,7 +179,7 @@ export const AppProvider = ({ children }) => {
 
     const intervalId = setInterval(refreshData, 5000);
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, currentUser, userRole]);
+  }, [isAuthenticated, currentUser?.id, userRole, refreshStudentData, refreshAdminData, fetchNotifications]);
 
   const markNotificationRead = async (notificationId) => {
     try {
