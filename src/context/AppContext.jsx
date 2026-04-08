@@ -255,8 +255,10 @@ export const AppProvider = ({ children }) => {
         method: 'DELETE'
       });
       if (res.ok) {
-        fetchCourses();
+        setCourseList((prev) => prev.filter((course) => course.id !== courseId));
         showToast('Course deleted successfully', 'success');
+      } else {
+        showToast(`Course could not be deleted. Server returned ${res.status}.`, 'error');
       }
     } catch (e) {
       showToast('Error deleting course', 'error');

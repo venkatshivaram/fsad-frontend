@@ -2,10 +2,6 @@ import { useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const COLLEGE_DAY_START = (7 * 60) + 10;
-const COLLEGE_DAY_END = (17 * 60) + 30;
-const SESSION_DURATION = 50;
-const BREAK_DURATION = 10;
 
 const normalizeDay = (value) => {
   const day = String(value || '').trim().toLowerCase();
@@ -43,6 +39,9 @@ const parseTime = (value) => {
     hours += 12;
   } else if (meridiem === 'AM' && hours === 12) {
     hours = 0;
+  } else if (!meridiem && hours > 0 && hours < 8) {
+    // Existing data appears to store some afternoon times like 03:50 instead of 15:50.
+    hours += 12;
   }
 
   return (hours * 60) + minutes;
@@ -64,18 +63,22 @@ const buildTimeSlots = (courses) => {
     }))
     .filter((course) => course.normalizedDay && course.parsedStart != null && course.parsedEnd != null);
 
+  if (parsedCourses.length === 0) {
+    return {
+      parsedCourses,
+      timeSlots: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
+    };
+  }
+
+  const earliestHour = Math.min(...parsedCourses.map((course) => Math.floor(course.parsedStart / 60)));
+  const latestHour = Math.max(...parsedCourses.map((course) => Math.ceil(course.parsedEnd / 60)));
+
+  const startHour = Math.min(earliestHour, 9);
+  const endHour = Math.max(latestHour, 17);
   const timeSlots = [];
 
-  for (
-    let start = COLLEGE_DAY_START;
-    start + SESSION_DURATION <= COLLEGE_DAY_END;
-    start += SESSION_DURATION + BREAK_DURATION
-  ) {
-    timeSlots.push({
-      start,
-      end: start + SESSION_DURATION,
-      label: `${formatMinutes(start)} - ${formatMinutes(start + SESSION_DURATION)}`
-    });
+  for (let hour = startHour; hour <= endHour; hour += 1) {
+    timeSlots.push(formatMinutes(hour * 60));
   }
 
   return { parsedCourses, timeSlots };
@@ -89,12 +92,13 @@ const ScheduleGrid = () => {
     [registeredCourses]
   );
 
-  const getCourseForSlot = (day, slot) => {
+  const getCourseForSlot = (day, time) => {
     const normalizedDay = normalizeDay(day);
+    const slotMinutes = parseTime(time);
 
     return parsedCourses.find((course) => {
       if (course.normalizedDay !== normalizedDay) return false;
-      return course.parsedStart < slot.end && course.parsedEnd > slot.start;
+      return slotMinutes >= course.parsedStart && slotMinutes < course.parsedEnd;
     });
   };
 
@@ -113,17 +117,17 @@ const ScheduleGrid = () => {
             </tr>
           </thead>
           <tbody>
-            {timeSlots.map((slot) => (
-              <tr key={slot.label} className="hover:bg-slate-50">
+            {timeSlots.map((time) => (
+              <tr key={time} className="hover:bg-slate-50">
                 <td className="border border-slate-200 bg-slate-50 p-3 font-semibold text-slate-700">
-                  {slot.label}
+                  {time}
                 </td>
                 {days.map((day) => {
-                  const course = getCourseForSlot(day, slot);
+                  const course = getCourseForSlot(day, time);
 
                   return (
                     <td
-                      key={`${day}-${slot.label}`}
+                      key={`${day}-${time}`}
                       className={`border border-slate-200 p-3 align-top ${course ? 'bg-blue-50' : ''}`}
                     >
                       {course && (

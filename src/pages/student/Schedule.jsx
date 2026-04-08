@@ -18,6 +18,9 @@ const formatTime = (value) => {
     hours += 12;
   } else if (meridiem === 'AM' && hours === 12) {
     hours = 0;
+  } else if (!meridiem && hours > 0 && hours < 8) {
+    // Existing data may store afternoon times without 24-hour notation.
+    hours += 12;
   }
 
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
@@ -30,10 +33,10 @@ const Schedule = () => {
     if (currentUser?.id) {
       refreshStudentData(currentUser.id);
     }
-  }, [currentUser?.id, refreshStudentData]);
+  }, [currentUser?.id]);
 
   const getPendingDrop = (courseId) =>
-    dropRequests.find((r) => r.course?.id === courseId && r.status === 'pending');
+    dropRequests.find((r) => r.course.id === courseId && r.status === 'pending');
 
   const totalCredits = registeredCourses.reduce((sum, course) => sum + course.credits, 0);
 
