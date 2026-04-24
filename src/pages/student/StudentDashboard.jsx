@@ -16,7 +16,7 @@ const dayColors = {
 const dayShort = { Monday: 'MON', Tuesday: 'TUE', Wednesday: 'WED', Thursday: 'THU', Friday: 'FRI' };
 
 const StudentDashboard = () => {
-  const { registeredCourses, courseList, dropRequests, registrationRequests = [], waitlistRequests = [], requestDrop } = useAppContext();
+  const { currentUser, registeredCourses, courseList, dropRequests, registrationRequests = [], waitlistRequests = [], requestDrop } = useAppContext();
   const navigate = useNavigate();
 
   // Drop requests for this student
@@ -37,6 +37,7 @@ const StudentDashboard = () => {
   const maxDayCount = Math.max(...Object.values(coursesByDay), 1);
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const studentName = currentUser?.username?.trim() || 'Student';
 
   return (
     <Layout>
@@ -52,7 +53,7 @@ const StudentDashboard = () => {
             <div>
               <p className="text-blue-100 text-sm font-semibold uppercase tracking-widest mb-1">CourseCrafter · Student Portal</p>
               <h1 className="text-4xl font-extrabold leading-tight">
-                Good day, Student! 👋
+                Good day, {studentName}! 👋
               </h1>
               <p className="text-blue-100 mt-2 text-sm">{today}</p>
 

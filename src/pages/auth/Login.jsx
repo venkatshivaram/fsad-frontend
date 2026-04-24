@@ -5,7 +5,6 @@ import { getDashboardPath } from '../../components/PrivateRoute';
 import { API_URL } from '../../config/api';
 
 const Login = () => {
-  const [selectedRole, setSelectedRole] = useState('student');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -233,38 +232,6 @@ const Login = () => {
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">{error}</div>
               )}
 
-              {/* Role Selection */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Account Type</label>
-                <p className="text-xs text-slate-500 mb-3">
-                  Your credentials decide the dashboard. This selection is only a visual hint.
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { value: 'student', icon: '🎓', label: 'Student', desc: 'Browse & register courses' },
-                    { value: 'admin', icon: '🛡️', label: 'Admin', desc: 'Approve registrations & drop requests' },
-                  ].map(({ value, icon, label, desc }) => (
-                    <label key={value}
-                      className={`relative flex flex-col items-center gap-1 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 text-center ${
-                        selectedRole === value
-                          ? 'border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-100'
-                          : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <input type="radio" name="role" value={value} checked={selectedRole === value}
-                        onChange={(e) => setSelectedRole(e.target.value)} className="sr-only" />
-                      {selectedRole === value && (
-                        <span className="absolute top-2 right-2 w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-[8px] font-black">✓</span>
-                        </span>
-                      )}
-                      <span className="text-2xl">{icon}</span>
-                      <span className="font-bold text-slate-800 text-sm">{label}</span>
-                      <span className="text-[11px] text-slate-500 leading-tight">{desc}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
               {/* Submit */}
               <button type="submit"
                 className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:scale-[1.02] active:scale-100 transition-all duration-200 text-sm tracking-wide"
