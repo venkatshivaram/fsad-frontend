@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
+import { getDashboardPath } from '../../components/PrivateRoute';
 import { API_URL } from '../../config/api';
 
 const Login = () => {
@@ -47,13 +48,13 @@ const Login = () => {
       
       if (res.ok) {
         const userData = await res.json();
-        if (userData.role !== selectedRole) {
-            setError(`Invalid credentials for ${selectedRole} role.`);
-            generateCaptcha();
-            return;
+        if (!userData?.role) {
+          setError('Login succeeded, but no user role was returned.');
+          generateCaptcha();
+          return;
         }
-        await login(selectedRole, userData);
-        navigate(selectedRole === 'student' ? '/student/dashboard' : '/admin/dashboard');
+        await login(userData);
+        navigate(getDashboardPath(userData.role));
       } else {
         const errData = await res.json();
         setError(errData.message || 'Invalid credentials');
@@ -234,7 +235,10 @@ const Login = () => {
 
               {/* Role Selection */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Login as</label>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Account Type</label>
+                <p className="text-xs text-slate-500 mb-3">
+                  Your credentials decide the dashboard. This selection is only a visual hint.
+                </p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { value: 'student', icon: '🎓', label: 'Student', desc: 'Browse & register courses' },

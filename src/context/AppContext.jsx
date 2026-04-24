@@ -198,8 +198,7 @@ export const AppProvider = ({ children }) => {
   };
 
   // Auth actions
-  const login = async (role, userData) => {
-    // We expect the backend login or signup to supply the user object
+  const login = async (userData) => {
     localStorage.setItem('currentUser', JSON.stringify(userData));
     hydrateUserSession(userData);
   };

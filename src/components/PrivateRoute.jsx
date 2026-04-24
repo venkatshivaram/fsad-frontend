@@ -3,7 +3,8 @@ import { useAppContext } from '../context/AppContext';
 
 export const getDashboardPath = (role) => {
   if (role === 'student') return '/student/dashboard';
-  return '/admin/dashboard';
+  if (role === 'admin') return '/admin/dashboard';
+  return '/login';
 };
 
 // Protect routes that require authentication

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
+import { getDashboardPath } from '../../components/PrivateRoute';
 import { API_URL } from '../../config/api';
 
 const Signup = () => {
@@ -66,8 +67,8 @@ const Signup = () => {
       
       if (res.ok) {
         const userData = await res.json();
-        await login(selectedRole, userData);
-        navigate(selectedRole === 'admin' ? '/admin/dashboard' : '/student/dashboard');
+        await login(userData);
+        navigate(getDashboardPath(userData.role));
       } else {
         const errData = await res.json();
         setErrors({ username: errData.message || 'Signup failed' });
