@@ -1,4 +1,13 @@
-export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace(/\/+$/, '');
+const deployedApiUrl =
+  window.location.hostname === 'fsad-frontend-1uro.onrender.com'
+    ? 'https://fsad-project-backend-0zl3.onrender.com/api'
+    : 'http://localhost:8080/api';
+
+export const API_URL = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  deployedApiUrl
+).replace(/\/+$/, '');
 
 export const AUTH_TOKEN_KEY = 'authToken';
 export const CURRENT_USER_KEY = 'currentUser';
