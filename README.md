@@ -39,11 +39,24 @@ When deploying, set:
 VITE_API_URL=https://your-backend-domain.com/api
 ```
 
+For Render, this must be set on the frontend/static site before building. Example:
+
+```bash
+VITE_API_URL=https://your-backend-service.onrender.com/api
+```
+
 The backend also needs:
 
 ```bash
 APP_FRONTEND_BASE_URL=https://your-frontend-domain.com
 APP_CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com
+```
+
+For your Render frontend, use:
+
+```bash
+APP_FRONTEND_BASE_URL=https://fsad-frontend-1uro.onrender.com
+APP_CORS_ALLOWED_ORIGINS=https://fsad-frontend-1uro.onrender.com
 ```
 
 `APP_FRONTEND_BASE_URL` is the URL used in forgot-password emails.
