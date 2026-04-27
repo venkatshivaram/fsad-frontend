@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { getDashboardPath } from '../../components/PrivateRoute';
-import { API_URL } from '../../config/api';
+import { API_URL, apiFetch } from '../../config/api';
+import ThemeToggle from '../../components/ThemeToggle';
 
 const Signup = () => {
   const [selectedRole, setSelectedRole] = useState('student');
@@ -54,7 +55,7 @@ const Signup = () => {
     }
     
     try {
-      const res = await fetch(`${API_URL}/auth/signup`, {
+      const res = await apiFetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -66,8 +67,9 @@ const Signup = () => {
       });
       
       if (res.ok) {
-        const userData = await res.json();
-        await login(userData);
+        const authData = await res.json();
+        const userData = authData.user || authData;
+        await login(userData, authData.token);
         navigate(getDashboardPath(userData.role));
       } else {
         const errData = await res.json();
@@ -88,6 +90,7 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen flex">
+      <ThemeToggle className="fixed right-6 top-6 z-50" />
 
       {/* ── Left Panel ── */}
       <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-12 text-white">
@@ -138,7 +141,7 @@ const Signup = () => {
       </div>
 
       {/* ── Right Panel ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30 p-6 overflow-y-auto">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30 p-6 overflow-y-auto transition-colors duration-300 dark:from-slate-950 dark:to-slate-900">
         <div className="w-full max-w-md py-8">
 
           {/* Mobile logo */}

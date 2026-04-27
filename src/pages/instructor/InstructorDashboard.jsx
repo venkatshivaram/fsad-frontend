@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { useAppContext } from '../../context/AppContext';
-import { API_URL } from '../../config/api';
+import { API_URL, apiFetch } from '../../config/api';
 
 const InstructorDashboard = () => {
   const { currentUser, logout } = useAppContext();
@@ -34,7 +34,7 @@ const InstructorDashboard = () => {
     }
 
     try {
-      const res = await fetch(`${API_URL}/instructor/${currentUser.username}/courses`);
+      const res = await apiFetch(`${API_URL}/instructor/${currentUser.username}/courses`);
       if (!res.ok) {
         throw new Error('Failed to load instructor courses');
       }
@@ -64,7 +64,7 @@ const InstructorDashboard = () => {
   const fetchRoster = async (courseId) => {
     setRosterLoading(true);
     try {
-      const res = await fetch(`${API_URL}/instructor/course/${courseId}/students`);
+      const res = await apiFetch(`${API_URL}/instructor/course/${courseId}/students`);
       if (!res.ok) {
         throw new Error('Failed to load student roster');
       }
@@ -89,7 +89,7 @@ const InstructorDashboard = () => {
     if (!newStudentUsername.trim()) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_URL}/instructor/course/${selectedCourse.id}/students`, {
+      const res = await apiFetch(`${API_URL}/instructor/course/${selectedCourse.id}/students`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentUsername: newStudentUsername })
@@ -113,7 +113,7 @@ const InstructorDashboard = () => {
     if (!window.confirm("Are you sure you want to remove this student from the course?")) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_URL}/instructor/course/${selectedCourse.id}/students/${studentId}`, {
+      const res = await apiFetch(`${API_URL}/instructor/course/${selectedCourse.id}/students/${studentId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -134,7 +134,7 @@ const InstructorDashboard = () => {
     if (!window.confirm("WARNING: Are you sure you want to COMPLETELY DELETE this student's account from the system? This cannot be undone.")) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_URL}/instructor/students/${studentId}`, {
+      const res = await apiFetch(`${API_URL}/instructor/students/${studentId}`, {
         method: 'DELETE'
       });
       if (res.ok) {

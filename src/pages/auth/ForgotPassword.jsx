@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { API_URL } from '../../config/api';
+import { API_URL, apiFetch } from '../../config/api';
+import ThemeToggle from '../../components/ThemeToggle';
 
 const ForgotPassword = () => {
   const [identifier, setIdentifier] = useState('');
@@ -50,7 +51,7 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/forgot-password`, {
+      const res = await apiFetch(`${API_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: identifier.trim() })
@@ -87,7 +88,7 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/reset-password`, {
+      const res = await apiFetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: resetToken, newPassword })
@@ -132,6 +133,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen flex">
+      <ThemeToggle className="fixed right-6 top-6 z-50" />
       <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-12 text-white">
         <div className="absolute top-0 left-0 h-full w-full">
           <div className="absolute top-[-80px] right-[-80px] h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
@@ -205,7 +207,7 @@ const ForgotPassword = () => {
         </div>
       </div>
 
-      <div className="flex w-full items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30 p-6 lg:w-1/2">
+      <div className="flex w-full items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30 p-6 transition-colors duration-300 dark:from-slate-950 dark:to-slate-900 lg:w-1/2">
         <div className="w-full max-w-md">
           <div className="mb-8 flex justify-center lg:hidden">
             <div className="flex items-center gap-2">

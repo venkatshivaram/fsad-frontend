@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { API_URL } from '../config/api';
+import { API_URL, AUTH_TOKEN_KEY, CURRENT_USER_KEY, apiFetch, clearSession } from '../config/api';
 
 const AppContext = createContext();
+const THEME_KEY = 'coursecrafter-theme';
 
 export const useAppContext = () => {
   const context = useContext(AppContext);
@@ -12,6 +13,15 @@ export const useAppContext = () => {
 };
 
 export const AppProvider = ({ children }) => {
+  // Theme state
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
   // User state
   const [userRole, setUserRole] = useState(null); // 'student' or 'admin'
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -36,24 +46,37 @@ export const AppProvider = ({ children }) => {
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.style.colorScheme = theme;
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
+  };
+
   // Load Initial Courses and Auth State (if saved in localStorage)
   useEffect(() => {
     fetchCourses();
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
+    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
+    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (storedUser && storedToken) {
       try {
         const parsedUser = JSON.parse(storedUser);
         hydrateUserSession(parsedUser);
       } catch (e) {
         console.error('Failed to restore saved session', e);
-        localStorage.removeItem('currentUser');
+        clearSession();
       }
+    } else if (storedUser || storedToken) {
+      clearSession();
     }
   }, []);
 
   const fetchCourses = async () => {
     try {
-      const res = await fetch(`${API_URL}/courses`);
+      const res = await apiFetch(`${API_URL}/courses`);
       const data = await res.json();
       setCourseList(data);
     } catch (e) {
@@ -63,7 +86,7 @@ export const AppProvider = ({ children }) => {
 
   const fetchRegisteredCourses = async (userId) => {
     try {
-      const res = await fetch(`${API_URL}/student/${userId}/courses`);
+      const res = await apiFetch(`${API_URL}/student/${userId}/courses`);
       const data = await res.json();
       setRegisteredCourses(data);
     } catch (e) {
@@ -76,7 +99,7 @@ export const AppProvider = ({ children }) => {
       const url = role === 'admin'
         ? `${API_URL}/admin/drop-requests`
         : `${API_URL}/student/${userId}/drop-requests`;
-      const res = await fetch(url);
+      const res = await apiFetch(url);
       const data = await res.json();
       setDropRequests(data);
     } catch (e) {
@@ -89,7 +112,7 @@ export const AppProvider = ({ children }) => {
       const url = role === 'admin' 
         ? `${API_URL}/admin/registration-requests` 
         : `${API_URL}/student/${userId}/registration-requests`;
-      const res = await fetch(url);
+      const res = await apiFetch(url);
       const data = await res.json();
       setRegistrationRequests(data);
     } catch (e) {
@@ -99,7 +122,7 @@ export const AppProvider = ({ children }) => {
 
   const fetchWaitlistRequests = async (userId) => {
     try {
-      const res = await fetch(`${API_URL}/student/${userId}/waitlist-requests`);
+      const res = await apiFetch(`${API_URL}/student/${userId}/waitlist-requests`);
       const data = await res.json();
       setWaitlistRequests(data);
     } catch (e) {
@@ -109,7 +132,7 @@ export const AppProvider = ({ children }) => {
 
   const fetchNotifications = async (userId) => {
     try {
-      const res = await fetch(`${API_URL}/notifications/${userId}`);
+      const res = await apiFetch(`${API_URL}/notifications/${userId}`);
       const data = await res.json();
       setNotifications(data);
     } catch (e) {
@@ -134,12 +157,12 @@ export const AppProvider = ({ children }) => {
 
   const hydrateUserSession = (userData) => {
     if (!userData || !userData.role || !['student', 'admin'].includes(userData.role)) {
-      localStorage.removeItem('currentUser');
+      clearSession();
       return;
     }
 
     if (!userData.username || userData.id == null) {
-      localStorage.removeItem('currentUser');
+      clearSession();
       return;
     }
 
@@ -176,7 +199,7 @@ export const AppProvider = ({ children }) => {
 
   const markNotificationRead = async (notificationId) => {
     try {
-      const res = await fetch(`${API_URL}/notifications/${notificationId}/read`, { method: 'POST' });
+      const res = await apiFetch(`${API_URL}/notifications/${notificationId}/read`, { method: 'POST' });
       if (res.ok && currentUser) {
         fetchNotifications(currentUser.id);
       }
@@ -188,7 +211,7 @@ export const AppProvider = ({ children }) => {
   const markAllNotificationsRead = async () => {
     if (!currentUser) return;
     try {
-      const res = await fetch(`${API_URL}/notifications/${currentUser.id}/read-all`, { method: 'POST' });
+      const res = await apiFetch(`${API_URL}/notifications/${currentUser.id}/read-all`, { method: 'POST' });
       if (res.ok) {
         fetchNotifications(currentUser.id);
       }
@@ -198,8 +221,11 @@ export const AppProvider = ({ children }) => {
   };
 
   // Auth actions
-  const login = async (userData) => {
-    localStorage.setItem('currentUser', JSON.stringify(userData));
+  const login = async (userData, token) => {
+    if (token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+    }
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userData));
     hydrateUserSession(userData);
   };
 
@@ -212,13 +238,13 @@ export const AppProvider = ({ children }) => {
     setRegistrationRequests([]);
     setWaitlistRequests([]);
     setNotifications([]);
-    localStorage.removeItem('currentUser');
+    clearSession();
   };
 
   // Course management actions (Admin)
   const addCourse = async (course) => {
     try {
-      const res = await fetch(`${API_URL}/courses`, {
+      const res = await apiFetch(`${API_URL}/courses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(course)
@@ -234,7 +260,7 @@ export const AppProvider = ({ children }) => {
 
   const updateCourse = async (updatedCourse) => {
     try {
-      const res = await fetch(`${API_URL}/courses/${updatedCourse.id}`, {
+      const res = await apiFetch(`${API_URL}/courses/${updatedCourse.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedCourse)
@@ -250,7 +276,7 @@ export const AppProvider = ({ children }) => {
 
   const deleteCourse = async (courseId) => {
     try {
-      const res = await fetch(`${API_URL}/courses/${courseId}`, {
+      const res = await apiFetch(`${API_URL}/courses/${courseId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -268,7 +294,7 @@ export const AppProvider = ({ children }) => {
   const registerCourse = async (course) => {
     if(!currentUser) return;
     try {
-      const res = await fetch(`${API_URL}/student/${currentUser.id}/register-request/${course.id}`, {
+      const res = await apiFetch(`${API_URL}/student/${currentUser.id}/register-request/${course.id}`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -303,7 +329,7 @@ export const AppProvider = ({ children }) => {
   const requestDrop = async (course) => {
     if(!currentUser) return;
     try {
-      const res = await fetch(`${API_URL}/student/${currentUser.id}/drop-request/${course.id}`, {
+      const res = await apiFetch(`${API_URL}/student/${currentUser.id}/drop-request/${course.id}`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -320,7 +346,7 @@ export const AppProvider = ({ children }) => {
 
   const approveDrop = async (requestId) => {
     try {
-      const res = await fetch(`${API_URL}/admin/drop-requests/${requestId}/approve`, {
+      const res = await apiFetch(`${API_URL}/admin/drop-requests/${requestId}/approve`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -334,7 +360,7 @@ export const AppProvider = ({ children }) => {
 
   const rejectDrop = async (requestId) => {
     try {
-      const res = await fetch(`${API_URL}/admin/drop-requests/${requestId}/reject`, {
+      const res = await apiFetch(`${API_URL}/admin/drop-requests/${requestId}/reject`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -349,7 +375,7 @@ export const AppProvider = ({ children }) => {
   // ── Registration Request actions ──────────────────────────────
   const approveRegistration = async (requestId) => {
     try {
-      const res = await fetch(`${API_URL}/admin/registration-requests/${requestId}/approve`, {
+      const res = await apiFetch(`${API_URL}/admin/registration-requests/${requestId}/approve`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -363,7 +389,7 @@ export const AppProvider = ({ children }) => {
 
   const rejectRegistration = async (requestId) => {
     try {
-      const res = await fetch(`${API_URL}/admin/registration-requests/${requestId}/reject`, {
+      const res = await apiFetch(`${API_URL}/admin/registration-requests/${requestId}/reject`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -377,7 +403,7 @@ export const AppProvider = ({ children }) => {
 
   const addStudent = async (studentData) => {
     try {
-      const res = await fetch(`${API_URL}/admin/students`, {
+      const res = await apiFetch(`${API_URL}/admin/students`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(studentData)
@@ -415,6 +441,8 @@ export const AppProvider = ({ children }) => {
     waitlistRequests,
     notifications,
     toast,
+    theme,
+    toggleTheme,
     login,
     logout,
     addCourse,

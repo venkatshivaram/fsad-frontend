@@ -4,6 +4,116 @@
 @tailwind utilities;
 /* stylelint-enable at-rule-no-unknown */
 
+@layer base {
+  html {
+    background: #f8fafc;
+  }
+
+  html.dark {
+    background: #020617;
+  }
+
+  body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer components {
+  .dark .bg-white {
+    background-color: #0f172a;
+  }
+
+  .dark .bg-slate-50,
+  .dark .bg-slate-50\/50,
+  .dark .bg-slate-50\/60,
+  .dark .bg-slate-50\/80,
+  .dark .hover\:bg-slate-50:hover,
+  .dark .hover\:bg-slate-50\/50:hover {
+    background-color: rgb(15 23 42 / 0.85);
+  }
+
+  .dark .bg-slate-100,
+  .dark .bg-slate-200,
+  .dark .bg-slate-300,
+  .dark .hover\:bg-slate-100:hover {
+    background-color: #1e293b;
+  }
+
+  .dark .bg-blue-50,
+  .dark .bg-blue-50\/30,
+  .dark .bg-indigo-50,
+  .dark .bg-indigo-50\/30,
+  .dark .bg-indigo-50\/40,
+  .dark .hover\:bg-indigo-50\/30:hover,
+  .dark .hover\:bg-indigo-50\/40:hover {
+    background-color: rgb(30 41 59 / 0.75);
+  }
+
+  .dark .from-slate-50 {
+    --tw-gradient-from: #020617 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(2 6 23 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .dark .via-blue-50 {
+    --tw-gradient-to: rgb(15 23 42 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #0f172a var(--tw-gradient-via-position), var(--tw-gradient-to);
+  }
+
+  .dark .to-indigo-50,
+  .dark .to-blue-50\/30 {
+    --tw-gradient-to: #111827 var(--tw-gradient-to-position);
+  }
+
+  .dark .border-slate-100,
+  .dark .border-slate-200,
+  .dark .border-slate-300,
+  .dark .border-indigo-100 {
+    border-color: #334155;
+  }
+
+  .dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #334155;
+  }
+
+  .dark .text-slate-900,
+  .dark .text-slate-800,
+  .dark .text-slate-700 {
+    color: #e2e8f0;
+  }
+
+  .dark .text-slate-600,
+  .dark .text-slate-500,
+  .dark .text-slate-400 {
+    color: #94a3b8;
+  }
+
+  .dark input,
+  .dark select,
+  .dark textarea {
+    background-color: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #64748b;
+  }
+
+  .dark input:disabled,
+  .dark select:disabled,
+  .dark textarea:disabled {
+    background-color: #1e293b;
+    color: #94a3b8;
+  }
+
+  .dark .glass {
+    background: rgb(15 23 42 / 0.9);
+    border-color: rgb(148 163 184 / 0.2);
+  }
+}
+
 /* Custom animations */
 @keyframes slide-up {
   from {
